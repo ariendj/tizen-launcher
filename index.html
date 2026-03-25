@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steuerung</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;600;800&family=Barlow:wght@300;400&display=swap');
+
+    :root {
+      --bg:        #0a0c10;
+      --panel:     #111318;
+      --border:    #1e2230;
+      --accent-a:  #00e5ff;
+      --accent-b:  #ff3d71;
+      --text:      #e8eaf0;
+      --muted:     #4a5068;
+      --success:   #00e096;
+      --error:     #ff3d71;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridDrift 30s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes gridDrift {
+      from { background-position: 0 0; }
+      to   { background-position: 60px 60px; }
+    }
+
+    /* Corner decorations */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent-a), transparent);
+      opacity: .6;
+    }
+
+    .wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 0;
+      padding: 40px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 56px;
+      animation: fadeDown .6s ease both;
+    }
+
+    .header .eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 300;
+      font-size: 13px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent-a);
+      opacity: .8;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: clamp(36px, 5vw, 72px);
+      letter-spacing: -.01em;
+      line-height: 1;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .header h1 span {
+      color: var(--accent-a);
+    }
+
+    /* Button row */
+    .button-row {
+      display: flex;
+      gap: 40px;
+      align-items: stretch;
+    }
+
+    /* Card button */
+    .cmd-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      width: clamp(200px, 22vw, 340px);
+      aspect-ratio: 1 / 1.1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+      animation: fadeUp .6s ease both;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      padding: 40px 32px;
+    }
+
+    .cmd-btn:nth-child(2) { animation-delay: .12s; }
+
+    /* Hover glow */
+    .cmd-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+
+    .cmd-btn.btn-a::before { background: radial-gradient(ellipse at 50% 110%, rgba(0,229,255,.15) 0%, transparent 65%); }
+    .cmd-btn.btn-b::before { background: radial-gradient(ellipse at 50% 110%, rgba(255,61,113,.15) 0%, transparent 65%); }
+
+    .cmd-btn:hover::before,
+    .cmd-btn:focus::before { opacity: 1; }
+
+    .cmd-btn:hover {
+      transform: translateY(-4px);
+    }
+
+    .cmd-btn.btn-a:hover,
+    .cmd-btn.btn-a:focus {
+      border-color: var(--accent-a);
+      box-shadow: 0 0 0 1px var(--accent-a), 0 24px 60px rgba(0,229,255,.12);
+    }
+
+    .cmd-btn.btn-b:hover,
+    .cmd-btn.btn-b:focus {
+      border-color: var(--accent-b);
+      box-shadow: 0 0 0 1px var(--accent-b), 0 24px 60px rgba(255,61,113,.12);
+    }
+
+    /* Active press */
+    .cmd-btn:active { transform: translateY(0) scale(.97); }
+
+    /* Top accent line */
+    .cmd-btn .line {
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 0 0 2px 2px;
+      transform: scaleX(0);
+      transition: transform .2s ease;
+      transform-origin: center;
+    }
+
+    .btn-a .line { background: var(--accent-a); }
+    .btn-b .line { background: var(--accent-b); }
+
+    .cmd-btn:hover .line,
+    .cmd-btn:focus .line { transform: scaleX(1); }
+
+    /* Icon */
+    .cmd-btn .icon {
+      font-size: 52px;
+      line-height: 1;
+      filter: grayscale(1) brightness(.6);
+      transition: filter .2s ease;
+    }
+
+    .cmd-btn:hover .icon,
+    .cmd-btn:focus .icon { filter: grayscale(0) brightness(1); }
+
+    /* Label */
+    .cmd-btn .label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: clamp(18px, 2.5vw, 28px);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .btn-a .label { color: var(--accent-a); }
+    .btn-b .label { color: var(--accent-b); }
+
+    /* Sub-label */
+    .cmd-btn .sublabel {
+      font-size: 12px;
+      letter-spacing: .12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--muted);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      letter-spacing: .2em;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      width: 1px;
+      height: 60px;
+      background: linear-gradient(to bottom, transparent, var(--border), transparent);
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 48px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px 28px;
+      font-size: 14px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transition: opacity .25s ease, transform .25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .toast.ok  .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .toast.ok  { border-color: rgba(0,224,150,.25); color: var(--success); }
+    .toast.err .dot { background: var(--error); box-shadow: 0 0 8px var(--error); }
+    .toast.err { border-color: rgba(255,61,113,.25); color: var(--error); }
+
+    /* Corner badge */
+    .corner-info {
+      position: fixed;
+      bottom: 20px; right: 24px;
+      font-size: 10px;
+      letter-spacing: .12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      opacity: .4;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <header class="header">
+      <p class="eyebrow">Gerätesteuerung</p>
+      <h1>Befehl <span>Auswahl</span></h1>
+    </header>
+
+    <div class="button-row">
+
+      <!-- Button A -->
+      <button
+        class="cmd-btn btn-a"
+        onclick="sendPost('A')"
+        tabindex="0"
+        aria-label="Befehl A ausführen">
+        <div class="line"></div>
+        <div class="icon">⚡</div>
+        <div class="label">Befehl A</div>
+        <div class="sublabel">POST → /api/cmd-a</div>
+      </button>
+
+      <div class="divider">oder</div>
+
+      <!-- Button B -->
+      <button
+        class="cmd-btn btn-b"
+        onclick="sendPost('B')"
+        tabindex="0"
+        aria-label="Befehl B ausführen">
+        <div class="line"></div>
+        <div class="icon">🔁</div>
+        <div class="label">Befehl B</div>
+        <div class="sublabel">POST → /api/cmd-b</div>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div class="dot"></div>
+    <span id="toast-msg"></span>
+  </div>
+
+  <div class="corner-info">Samsung QM43B-T · Tizen</div>
+
+  <script>
+    // ─── Konfiguration ────────────────────────────────────────────────
+    const ENDPOINTS = {
+      A: 'https://httpbin.org/post',   // ← URL anpassen
+      B: 'https://httpbin.org/post'    // ← URL anpassen
+    };
+
+    const PAYLOADS = {
+      A: { command: 'action_a', source: 'tizen-display' },
+      B: { command: 'action_b', source: 'tizen-display' }
+    };
+    // ─────────────────────────────────────────────────────────────────
+
+    let toastTimer = null;
+
+    async function sendPost(btn) {
+      const url     = ENDPOINTS[btn];
+      const payload = PAYLOADS[btn];
+
+      showToast('Wird gesendet …', 'neutral');
+
+      try {
+        const response = await fetch(url, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          showToast(`Befehl ${btn} erfolgreich gesendet`, 'ok');
+        } else {
+          showToast(`Fehler: HTTP ${response.status}`, 'err');
+        }
+      } catch (err) {
+        showToast(`Netzwerkfehler: ${err.message}`, 'err');
+      }
+    }
+
+    function showToast(msg, type) {
+      const toast = document.getElementById('toast');
+      const label = document.getElementById('toast-msg');
+
+      toast.classList.remove('show', 'ok', 'err');
+      label.textContent = msg;
+
+      if (type === 'ok')  toast.classList.add('ok');
+      if (type === 'err') toast.classList.add('err');
+
+      // Force reflow so transition fires every time
+      void toast.offsetWidth;
+      toast.classList.add('show');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+  </script>
+
+</body>
+</html>
